@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xasanov Baxrom - Rasmlarni PDF ga aylantirish</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-info h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-info .tagline {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .contact-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .converter-section {
+            text-align: center;
+        }
+
+        .converter-title {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .pdf-name-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin: 20px auto;
+            outline: none;
+            transition: border-color 0.3s ease;
+            display: block;
+        }
+
+        .pdf-name-input:focus {
+            border-color: #764ba2;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .image-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #e74c3c;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .image-item .remove-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .image-item .image-info {
+            padding: 8px;
+            background: #f8f9ff;
+            font-size: 0.8rem;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .files-count {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-section {
+                flex-direction: column;
+            }
+
+            .profile-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .contact-info {
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .upload-area {
+                padding: 40px 15px;
+            }
+
+            .images-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-image {
+                width: 80px;
+                height: 80px;
+            }
+
+            .converter-title {
+                font-size: 1.4rem;
+            }
+
+            .images-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-content">
+                <div class="profile-section">
+                    <img src="https://i.imgur.com/2Y4Y4Y4.png" alt="Xasanov Baxrom" class="profile-image">
+                    <div class="profile-info">
+                        <h1>Xasanov Baxrom</h1>
+                        <p class="tagline">🚀 Rasmlarni PDF ga aylantirish xizmati</p>
+                        <div class="contact-info">
+                            <a href="https://t.me/BaxromJon_27" class="contact-item" target="_blank">
+                                <i class="fab fa-telegram"></i>
+                                @BaxromJon_27
+                            </a>
+                            <a href="tel:+998200063429" class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                +998 200 06 34 29
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="converter-section">
+                <h2 class="converter-title">📸 Rasmlarni PDF ga aylantirish</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Rasmlarni tanlang yoki shu yerga oling</div>
+                    <div class="upload-subtext">PNG, JPG, JPEG, GIF, BMP formatlarida (bir nechta)</div>
+                    <input type="file" id="fileInput" accept="image/*" multiple>
+                </div>
+
+                <div class="files-count" id="filesCount">
+                    <span id="filesCountText"></span>
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <div class="images-grid" id="imagesGrid"></div>
+                </div>
+
+                <input type="text" class="pdf-name-input" id="pdfNameInput" placeholder="PDF fayli nomi (masalan: mening_rasmlarim)">
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Fayllar yaratilmoqda...</p>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    ✅ Fayllar muvaffaqiyatli yaratildi!
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="convertBtn" style="display: none;">
+                        <i class="fas fa-file-pdf"></i>
+                        PDF yaratish (<span id="convertBtnCount">0</span> ta rasm)
+                    </button>
+                    
+                    <button class="btn btn-secondary" id="zipBtn" style="display: none;">
+                        <i class="fas fa-file-archive"></i>
+                        ZIP yaratish (<span id="zipBtnCount">0</span> ta rasm)
+                    </button>
+                    
+                    <button class="btn btn-danger" id="clearBtn" style="display: none;">
+                        <i class="fas fa-trash"></i>
+                        Barchasini tozalash
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Xasanov Baxrom. Barcha huquqlar himoyalangan.</p>
+        </footer>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagesGrid = document.getElementById('imagesGrid');
+        const convertBtn = document.getElementById('convertBtn');
+        const zipBtn = document.getElementById('zipBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('successMessage');
+        const filesCount = document.getElementById('filesCount');
+        const filesCountText = document.getElementById('filesCountText');
+        const pdfNameInput = document.getElementById('pdfNameInput');
+        const convertBtnCount = document.getElementById('convertBtnCount');
+        const zipBtnCount = document.getElementById('zipBtnCount');
+
+        let uploadedFiles = [];
+
+        // Upload area click handler
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    handleFile(file);
+                }
+            });
+        });
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    handleFile(file);
+                }
+            });
+        });
+
+        function handleFile(file) {
+            // Check if file already exists
+            if (uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                return;
+            }
+            
+            // Add file with timestamp to preserve order
+            const fileWithOrder = {
+                ...file,
+                order: Date.now() + Math.random(),
+                id: file.name + '_' + Date.now() + '_' + Math.random()
+            };
+            
+            uploadedFiles.push(fileWithOrder);
+            
+            // Sort files by order to maintain selection order
+            uploadedFiles.sort((a, b) => a.order - b.order);
+            
+            updateUI();
+            
+            // Create image element for preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                addImageToGrid(e.target.result, fileWithOrder);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addImageToGrid(imageSrc, file) {
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.dataset.fileId = file.id;
+            imageItem.dataset.fileName = file.name;
+            
+            imageItem.innerHTML = `
+                <img src="${imageSrc}" alt="${file.name}">
+                <button class="remove-btn" onclick="removeImage('${file.id}')">×</button>
+                <div class="image-info">${file.name}</div>
+            `;
+            
+            // Insert in correct order
+            const existingItems = Array.from(imagesGrid.children);
+            const insertIndex = existingItems.findIndex(item => {
+                const existingFile = uploadedFiles.find(f => f.id === item.dataset.fileId);
+                return existingFile && existingFile.order > file.order;
+            });
+            
+            if (insertIndex === -1) {
+                imagesGrid.appendChild(imageItem);
+            } else {
+                imagesGrid.insertBefore(imageItem, imagesGrid.children[insertIndex]);
+            }
+        }
+
+        function removeImage(fileId) {
+            uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+            const imageItem = document.querySelector(`[data-file-id="${fileId}"]`);
+            if (imageItem) {
+                imageItem.remove();
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            const count = uploadedFiles.length;
+            
+            if (count > 0) {
+                previewContainer.style.display = 'block';
+                convertBtn.style.display = 'inline-flex';
+                zipBtn.style.display = 'inline-flex';
+                clearBtn.style.display = 'inline-flex';
+                filesCount.style.display = 'block';
+                filesCountText.textContent = `${count} ta rasm tanlandi`;
+                convertBtnCount.textContent = count;
+                zipBtnCount.textContent = count;
+            } else {
+                previewContainer.style.display = 'none';
+                convertBtn.style.display = 'none';
+                zipBtn.style.display = 'none';
+                clearBtn.style.display = 'none';
+                filesCount.style.display = 'none';
+            }
+        }
+
+        // Convert button click handler
+        convertBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) return;
+
+            loading.style.display = 'block';
+            convertBtn.disabled = true;
+            zipBtn.disabled = true;
+            clearBtn.disabled = true;
+            successMessage.style.display = 'none';
+
+            try {
+                await convertToPdf();
+                successMessage.style.display = 'block';
+            } catch (error) {
+                alert('Xatolik yuz berdi: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                convertBtn.disabled = false;
+                zipBtn.disabled = false;
+                clearBtn.disabled = false;
+            }
+        });
+
+        // ZIP button click handler
+        zipBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) return;
+
+            loading.style.display = 'block';
+            convertBtn.disabled = true;
+            zipBtn.disabled = true;
+            clearBtn.disabled = true;
+            successMessage.style.display = 'none';
+
+            try {
+                await createZip();
+                successMessage.style.display = 'block';
+            } catch (error) {
+                alert('Xatolik yuz berdi: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                convertBtn.disabled = false;
+                zipBtn.disabled = false;
+                clearBtn.disabled = false;
+            }
+        });
+
+        // Clear button click handler
+        clearBtn.addEventListener('click', () => {
+            uploadedFiles = [];
+            imagesGrid.innerHTML = '';
+            fileInput.value = '';
+            pdfNameInput.value = '';
+            updateUI();
+            successMessage.style.display = 'none';
+        });
+
+        async function convertToPdf() {
+            return new Promise((resolve, reject) => {
+                if (uploadedFiles.length === 0) {
+                    reject(new Error('Hech qanday rasm tanlanmagan'));
+                    return;
+                }
+                
+                const pdf = new jsPDF();
+                let processedImages = 0;
+                const totalImages = uploadedFiles.length;
+
+                uploadedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgData = e.target.result;
+                        const img = new Image();
+                        
+                        img.onload = function() {
+                            if (index > 0) {
+                                pdf.addPage();
+                            }
+                            
+                            const pageWidth = pdf.internal.pageSize.getWidth();
+                            const pageHeight = pdf.internal.pageSize.getHeight();
+                            const imgWidth = img.width;
+                            const imgHeight = img.height;
+                            const imgRatio = imgWidth / imgHeight;
+                            const pageRatio = pageWidth / pageHeight;
+                            
+                            let finalWidth, finalHeight;
+                            
+                            if (imgRatio > pageRatio) {
+                                finalWidth = pageWidth * 0.9;
+                                finalHeight = finalWidth / imgRatio;
+                            } else {
+                                finalHeight = pageHeight * 0.9;
+                                finalWidth = finalHeight * imgRatio;
+                            }
+                            
+                            const x = (pageWidth - finalWidth) / 2;
+                            const y = (pageHeight - finalHeight) / 2;
+                            
+                            pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight, undefined, 'FAST');
+                            
+                            processedImages++;
+                            if (processedImages === totalImages) {
+                                const pdfName = pdfNameInput.value.trim() || 'rasmlar';
+                                const pdfFileName = pdfName.endsWith('.pdf') ? pdfName : pdfName + '.pdf';
+                                pdf.save(pdfFileName);
+                                resolve();
+                            }
+                        };
+                        
+                        img.onerror = function() {
+                            reject(new Error('Rasm yuklashda xatolik: ' + file.name));
+                        };
+                        
+                        img.src = imgData;
+                    };
+                    
+                    reader.onerror = function() {
+                        reject(new Error('Fayl o\'qishda xatolik: ' + file.name));
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        async function createZip() {
+            return new Promise((resolve, reject) => {
+                const zip = new JSZip();
+                let processedFiles = 0;
+                const totalFiles = uploadedFiles.length;
+
+                uploadedFiles.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        zip.file(file.name, e.target.result.split(',')[1], {base64: true});
+                        
+                        processedFiles++;
+                        if (processedFiles === totalFiles) {
+                            const zipName = pdfNameInput.value.trim() || 'rasmlar';
+                            const zipFileName = zipName.endsWith('.zip') ? zipName : zipName + '.zip';
+                            
+                            zip.generateAsync({type: "blob"}).then(function(content) {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(content);
+                                link.download = zipFileName;
+                                link.click();
+                                resolve();
+                            });
+                        }
+                    };
+                    
+                    reader.onerror = function() {
+                        reject(new Error('Fayl o\'qishda xatolik: ' + file.name));
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
